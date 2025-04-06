@@ -1,12 +1,11 @@
-
 'use client'
 import React, { FC, memo } from 'react'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
-import { coldarkDark } from 'react-syntax-highlighter/dist/cjs/styles/prism'
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/cjs/styles/prism'
 import ReactMarkdown, { Options } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
+
 
 interface Props {
   language: string
@@ -51,107 +50,67 @@ export const programmingLanguages: languageMap = {
   shell: '.sh',
   sql: '.sql',
   html: '.html',
-  css: '.css'
-  // add more file extensions here, make sure the key is same as language prop in CodeBlock.tsx component
-}
-
-export const generateRandomString = (length: number, lowercase = false) => {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXY3456789' // excluding similar looking characters like Z, 2, I, 1, O, 0
-  let result = ''
-  for (let i = 0; i < length; i++) {
-    result += chars.charAt(Math.floor(Math.random() * chars.length))
-  }
-  return lowercase ? result.toLowerCase() : result
-}
+  css: '.css',
+  json: '.json',
+  yaml: '.yaml',
+  markdown: '.md'
+};
 
 const CodeBlock: FC<Props> = memo(({ language, value }) => {
-//   const { isCopied, copyToClipboard } = useCopyToClipboard({ timeout: 2000 })
-
-  const downloadAsFile = () => {
-    if (typeof window === 'undefined') {
-      return
-    }
-    const fileExtension = programmingLanguages[language] || '.file'
-    const suggestedFileName = `file-${generateRandomString(
-      3,
-      true
-    )}${fileExtension}`
-    const fileName = window.prompt('Enter file name' || '', suggestedFileName)
-
-    if (!fileName) {
-      // User pressed cancel on prompt.
-      return
-    }
-
-    const blob = new Blob([value], { type: 'text/plain' })
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.download = fileName
-    link.href = url
-    link.style.display = 'none'
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-    URL.revokeObjectURL(url)
-  }
-
-  const onCopy = () => {
-    // if (isCopied) return
-    // copyToClipboard(value)
-  }
-
   return (
-    <div className="relative w-full font-sans codeblock bg-zinc-950">
-      <div className="flex items-center justify-between w-full px-6 py-2 pr-4 rounded-t bg-zinc-800 text-zinc-100">
-        <span className="text-xs lowercase">{language}</span>
-        <div className="flex items-center space-x-1">
+    <div className="relative my-4 rounded-lg overflow-hidden bg-[#1e1e1e]">
+      <div className="flex items-center justify-between px-4 py-2 bg-[#2d2d2d] text-gray-300 text-sm">
+        <span className="font-mono">{language || 'code'}</span>
+        <div className="flex items-center space-x-2">
+          <CopyButton value={value} />
         </div>
       </div>
       <SyntaxHighlighter
         language={language}
-        // style={coldarkDark}
         style={vscDarkPlus}
         PreTag="div"
         showLineNumbers
+        wrapLines
         customStyle={{
           margin: 0,
-          width: '100%',
           background: 'transparent',
-          padding: '1.5rem 1rem'
+          padding: '1rem',
+          fontSize: '0.9rem',
+          fontFamily: 'var(--font-mono)'
         }}
-        codeTagProps={{
-          style: {
-            fontSize: '0.9rem',
-            fontFamily: 'var(--font-mono)'
-          }
+        lineNumberStyle={{
+          minWidth: '2.25em',
+          color: '#6e7681',
         }}
       >
         {value}
       </SyntaxHighlighter>
     </div>
-  )
-})
-CodeBlock.displayName = 'CodeBlock'
-
-export { CodeBlock }
+  );
+});
+CodeBlock.displayName = 'CodeBlock';
 
 const MarkdownRenderer: FC<MarkdownRendererProps> = (props) => {
   return (
     <MemoizedReactMarkdown
-      className="prose break-words dark:prose-invert prose-p:leading-relaxed prose-pre:p-0"
+      className="prose dark:prose-invert prose-sm max-w-none prose-p:leading-relaxed prose-pre:p-0 prose-code:before:content-none prose-code:after:content-none prose-code:bg-gray-100 prose-code:dark:bg-gray-800 prose-code:px-1 prose-code:py-0.5 prose-code:rounded"
       remarkPlugins={[remarkGfm, remarkMath]}
       components={{
-        p({ children }) {
-          return <p className="mb-2 last:mb-0">{children}</p>;
-        },
+        h1: ({ node, ...props }) => <h1 className="text-3xl font-bold mt-6 mb-4" {...props} />,
+        h2: ({ node, ...props }) => <h2 className="text-2xl font-bold mt-5 mb-3" {...props} />,
+        h3: ({ node, ...props }) => <h3 className="text-xl font-bold mt-4 mb-2" {...props} />,
+        p: ({ node, ...props }) => <p className="my-3 leading-relaxed" {...props} />,
+        a: ({ node, ...props }) => <a className="text-blue-600 hover:underline dark:text-blue-400" {...props} />,
+        ul: ({ node, ...props }) => <ul className="list-disc pl-5 my-2" {...props} />,
+        ol: ({ node, ...props }) => <ol className="list-decimal pl-5 my-2" {...props} />,
+        blockquote: ({ node, ...props }) => (
+          <blockquote className="border-l-4 border-gray-300 pl-4 italic my-4 text-gray-600 dark:text-gray-400" {...props} />
+        ),
         code({ node, inline, className, children, ...props }) {
           if (children && children.length) {
             if (children[0] == "▍") {
-              return (
-                <span className="mt-1 cursor-default animate-pulse">▍</span>
-              );
+              return <span className="mt-1 animate-pulse">▍</span>;
             }
-
             children[0] = (children[0] as string).replace("`▍`", "▍");
           }
 
@@ -174,11 +133,22 @@ const MarkdownRenderer: FC<MarkdownRendererProps> = (props) => {
             />
           );
         },
+        table: ({ node, ...props }) => (
+          <div className="overflow-x-auto">
+            <table className="min-w-full border-collapse my-4" {...props} />
+          </div>
+        ),
+        th: ({ node, ...props }) => (
+          <th className="border px-4 py-2 text-left bg-gray-100 dark:bg-gray-700" {...props} />
+        ),
+        td: ({ node, ...props }) => (
+          <td className="border px-4 py-2" {...props} />
+        ),
       }}
     >
       {props.children}
     </MemoizedReactMarkdown>
-  )
-}
+  );
+};
 
 export default MarkdownRenderer;
