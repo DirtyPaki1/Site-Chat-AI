@@ -13,10 +13,7 @@ const SiteGPT = () => {
       const container = document.querySelector('.stars-container');
       if (!container) return;
 
-      // Clear existing stars
       container.innerHTML = '';
-      
-      // Create new stars
       const starsCount = 150;
       const colors = ['#ffffff', '#ffe9c5', '#d4fbff', '#a6d8ff'];
 
@@ -40,7 +37,6 @@ const SiteGPT = () => {
 
     createStars();
 
-    // Cleanup function
     return () => {
       const container = document.querySelector('.stars-container');
       if (container) container.innerHTML = '';
