@@ -2,10 +2,10 @@
 import React, { FC, memo } from 'react'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/cjs/styles/prism'
-import ReactMarkdown, { Options } from "react-markdown";
-import remarkGfm from "remark-gfm";
-import remarkMath from "remark-math";
-
+import ReactMarkdown, { Options } from "react-markdown"
+import remarkGfm from "remark-gfm"
+import remarkMath from "remark-math"
+import { FiCopy, FiCheck } from 'react-icons/fi'
 
 interface Props {
   language: string
@@ -17,7 +17,38 @@ interface languageMap {
 }
 
 type MarkdownRendererProps = {
-  children: string;
+  children: string
+}
+
+// CopyButton component
+const CopyButton = ({ value }: { value: string }) => {
+  const [isCopied, setIsCopied] = React.useState(false)
+
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(value)
+    setIsCopied(true)
+    setTimeout(() => setIsCopied(false), 2000)
+  }
+
+  return (
+    <button
+      onClick={copyToClipboard}
+      className="flex items-center gap-1 px-2 py-1 text-xs bg-gray-700 hover:bg-gray-600 rounded-md transition-colors"
+      aria-label="Copy code"
+    >
+      {isCopied ? (
+        <>
+          <FiCheck className="text-green-400" />
+          <span>Copied!</span>
+        </>
+      ) : (
+        <>
+          <FiCopy />
+          <span>Copy</span>
+        </>
+      )}
+    </button>
+  )
 }
 
 export const MemoizedReactMarkdown: FC<Options> = memo(
@@ -25,7 +56,7 @@ export const MemoizedReactMarkdown: FC<Options> = memo(
   (prevProps, nextProps) =>
     prevProps.children === nextProps.children &&
     prevProps.className === nextProps.className
-);
+)
 
 export const programmingLanguages: languageMap = {
   javascript: '.js',
@@ -54,16 +85,14 @@ export const programmingLanguages: languageMap = {
   json: '.json',
   yaml: '.yaml',
   markdown: '.md'
-};
+}
 
 const CodeBlock: FC<Props> = memo(({ language, value }) => {
   return (
     <div className="relative my-4 rounded-lg overflow-hidden bg-[#1e1e1e]">
       <div className="flex items-center justify-between px-4 py-2 bg-[#2d2d2d] text-gray-300 text-sm">
         <span className="font-mono">{language || 'code'}</span>
-        <div className="flex items-center space-x-2">
-          <CopyButton value={value} />
-        </div>
+        <CopyButton value={value} />
       </div>
       <SyntaxHighlighter
         language={language}
@@ -86,9 +115,9 @@ const CodeBlock: FC<Props> = memo(({ language, value }) => {
         {value}
       </SyntaxHighlighter>
     </div>
-  );
-});
-CodeBlock.displayName = 'CodeBlock';
+  )
+})
+CodeBlock.displayName = 'CodeBlock'
 
 const MarkdownRenderer: FC<MarkdownRendererProps> = (props) => {
   return (
@@ -148,7 +177,7 @@ const MarkdownRenderer: FC<MarkdownRendererProps> = (props) => {
     >
       {props.children}
     </MemoizedReactMarkdown>
-  );
-};
+  )
+}
 
-export default MarkdownRenderer;
+export default MarkdownRenderer
